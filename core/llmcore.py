@@ -105,6 +105,21 @@ def auto_make_url(base, path):
     if b.endswith(p): return b
     return f"{b}/{p}" if re.search(r'/v\d+(/|$)', b) else f"{b}/v1/{p}"
 
+# Model capability table (D4): add one row per family, query via model_caps — no scattered ifs.
+_MODEL_DEFAULTS = dict(context_win=30000, cut_msg_interval=5, trim_keep_rate=0.6, keep_thinking=False,
+                       temperature_override=None, temperature_clamp=None, max_tokens_field='max_tokens')
+_MODEL_CAPS = [
+    (lambda ml: 'deepseek' in ml, dict(context_win=70000, cut_msg_interval=25, trim_keep_rate=0.3, keep_thinking=True)),
+    (lambda ml: 'kimi' in ml or 'moonshot' in ml, dict(temperature_override=1)),
+    (lambda ml: 'minimax' in ml, dict(temperature_clamp=(0.01, 1.0))),
+    (lambda ml: ml.startswith(('gpt-5', 'o1', 'o2', 'o3', 'o4')), dict(max_tokens_field='max_completion_tokens')),
+]
+def model_caps(model):
+    ml = (model or '').lower(); caps = dict(_MODEL_DEFAULTS)
+    for match, override in _MODEL_CAPS:
+        if match(ml): caps.update(override)
+    return caps
+
 def _parse_claude_json(data):
     content_blocks = data.get("content", [])
     _record_usage(data.get("usage", {}), "messages")
@@ -388,10 +403,10 @@ def _stream_with_retry(sess, url, headers, payload, parse_fn):
 
 def _openai_stream(sess, messages):
     model, api_mode = sess.model, sess.api_mode
-    ml = model.lower()
+    caps = model_caps(model)
     temperature = sess.temperature
-    if 'kimi' in ml or 'moonshot' in ml: temperature = 1
-    elif 'minimax' in ml: temperature = max(0.01, min(temperature, 1.0))  # MiniMax requires temp in (0, 1]
+    if caps['temperature_override'] is not None: temperature = caps['temperature_override']
+    elif caps['temperature_clamp']: lo, hi = caps['temperature_clamp']; temperature = max(lo, min(temperature, hi))
     headers = {"Authorization": f"Bearer {sess.api_key}", "Content-Type": "application/json", "Accept": "text/event-stream"}
     if api_mode == "responses":
         url = auto_make_url(sess.api_base, "responses")
@@ -406,7 +421,7 @@ def _openai_stream(sess, messages):
         payload = {"model": model, "messages": messages, "stream": sess.stream}
         if sess.stream: payload["stream_options"] = {"include_usage": True}
         if temperature != 1: payload["temperature"] = temperature
-        if sess.max_tokens: payload["max_completion_tokens" if ml.startswith(("gpt-5", "o1", "o2", "o3", "o4")) else "max_tokens"] = sess.max_tokens
+        if sess.max_tokens: payload[caps['max_tokens_field']] = sess.max_tokens
         if sess.reasoning_effort: payload["reasoning_effort"] = sess.reasoning_effort
     tools = getattr(sess, 'tools', None)
     if tools: payload["tools"] = _prepare_oai_tools(tools, api_mode)
@@ -512,10 +527,10 @@ class BaseSession:
         self.api_key = cfg['apikey']
         self.api_base = cfg['apibase'].rstrip('/')
         self.model = cfg.get('model', '')
-        default_context_win = 30000
-        if 'deepseek' in self.model.lower():
-            default_context_win = 70000; self.cut_msg_interval = 25; self.trim_keep_rate = 0.3
-        self.context_win = cfg.get('context_win', default_context_win)
+        caps = model_caps(self.model)
+        self.cut_msg_interval = caps['cut_msg_interval']; self.trim_keep_rate = caps['trim_keep_rate']
+        self.keep_thinking = caps['keep_thinking']
+        self.context_win = cfg.get('context_win', caps['context_win'])
         self.history = []; self.lock = threading.Lock(); self.system = ""
         self.name = cfg.get('name', self.model)
         proxy = cfg.get('proxy'); 
@@ -576,8 +591,8 @@ def _drop_unsigned_thinking(messages):
     return messages
 
 def _ensure_thinking_blocks(messages, model):
-    """deepseek needs thinking in history!"""
-    if 'deepseek' not in model.lower(): return messages
+    """Some models (e.g. deepseek) require a thinking block in assistant history."""
+    if not model_caps(model)['keep_thinking']: return messages
     for m in messages:
         if m.get("role") != "assistant": continue
         c = m.get("content")
