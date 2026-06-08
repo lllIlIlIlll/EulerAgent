@@ -1813,7 +1813,7 @@ window.ga.onBridgeError((err) => {
   state.bridgeReady = false;
   state.restartingBridge = false;
 
-  if (err.type === 'no-mykey') {
+  if (err.type === 'no-ekey') {
     showError(err.message, 'Setup', async () => {
       await window.ga.openMykeyTemplate();
     }, { skipDiagnostic: true });
@@ -1957,7 +1957,7 @@ $('settings-btn').addEventListener('click', openSettings);
 $('close-settings').addEventListener('click', closeSettings);
 $('cancel-settings').addEventListener('click', closeSettings);
 $('save-settings').addEventListener('click', saveSettings);
-$('open-mykey').addEventListener('click', () => openConfigFile(window.ga.openMykey, 'mykey.py'));
+$('open-ekey').addEventListener('click', () => openConfigFile(window.ga.openMykey, 'ekey.py'));
 $('error-dismiss').addEventListener('click', hideError);
 
 settingsModal.querySelector('.modal-backdrop').addEventListener('click', closeSettings);

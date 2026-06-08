@@ -11,7 +11,7 @@ os.chdir(PROJECT_ROOT)
 from core.agentmain import EulerAgent
 from frontends.chatapp_common import format_restore
 from frontends.continue_cmd import handle_frontend_command as handle_continue_frontend, reset_conversation
-from llmcore import mykeys
+from llmcore import ekeys
 
 import traceback
 import lark_oapi as lark
@@ -301,9 +301,9 @@ def _extract_post_content(content_json):
     return "", []
 
 
-APP_ID = str(mykeys.get("fs_app_id", "") or "").strip()
-APP_SECRET = str(mykeys.get("fs_app_secret", "") or "").strip()
-ALLOWED_USERS = _to_allowed_set(mykeys.get("fs_allowed_users", []))
+APP_ID = str(ekeys.get("fs_app_id", "") or "").strip()
+APP_SECRET = str(ekeys.get("fs_app_secret", "") or "").strip()
+ALLOWED_USERS = _to_allowed_set(ekeys.get("fs_allowed_users", []))
 PUBLIC_ACCESS = not ALLOWED_USERS or "*" in ALLOWED_USERS
 AGENT_TIMEOUT_SEC = 900
 
@@ -791,7 +791,7 @@ def handle_command(open_id, cmd, chat_id=None):
 def main():
     global client
     if not APP_ID or not APP_SECRET:
-        print("错误: 请在 mykey.py 或 mykey.json 中配置 fs_app_id 和 fs_app_secret")
+        print("错误: 请在 ekey.py 或 ekey.json 中配置 fs_app_id 和 fs_app_secret")
         sys.exit(1)
     client = create_client()
     handler = lark.EventDispatcherHandler.builder("", "").register_p2_im_message_receive_v1(handle_message).build()

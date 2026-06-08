@@ -20,7 +20,7 @@ Two audiences:
 | **OS** | Windows 10/11, macOS 12+, or a modern Linux distribution. |
 | **Python** | Use **Python 3.11 or 3.12**. **Do not use Python 3.14** — it is incompatible with `pywebview` and a few GA dependencies. The one-line installer ships an isolated Python environment, so manual Python setup is usually unnecessary. |
 | **Git** | Recommended for updates and self-evolution. |
-| **LLM API key** | GA speaks two native protocols: **OpenAI-compatible** APIs and **Anthropic Claude native** APIs. GPT-family models, Claude, Kimi, MiniMax, DeepSeek, GLM, Qwen, Gemini through OAI-compatible gateways, and similar providers can be configured through `mykey.py`. |
+| **LLM API key** | GA speaks two native protocols: **OpenAI-compatible** APIs and **Anthropic Claude native** APIs. GPT-family models, Claude, Kimi, MiniMax, DeepSeek, GLM, Qwen, Gemini through OAI-compatible gateways, and similar providers can be configured through `ekey.py`. |
 
 ### Method 1: One-line install (recommended)
 
@@ -64,7 +64,7 @@ $env:INSTALL_DIR="C:\dev\EulerAgent"; powershell -ExecutionPolicy Bypass -c "$en
 
 #### Force reinstall
 
-Use this only when you know you want to refresh the installed files. Back up `mykey.py`, `memory/`, `skills/`, and any local work first.
+Use this only when you know you want to refresh the installed files. Back up `ekey.py`, `memory/`, `skills/`, and any local work first.
 
 ```bash
 FORCE=1 GLOBAL=1 bash -c "$(curl -fsSL http://fudankw.cn:9000/files/ga_install.sh)"
@@ -79,7 +79,7 @@ git clone https://github.com/lsdefine/EulerAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"        # Core + UI dependencies
-cp mykey_template.py mykey.py     # Fill in your LLM API key
+cp mykey_template.py ekey.py     # Fill in your LLM API key
 python launch.pyw
 ```
 
@@ -88,7 +88,7 @@ Full guide: [GETTING_STARTED.md](GETTING_STARTED.md)
 ### Configure your LLM key
 
 1. Open the installed `EulerAgent` directory.
-2. If `mykey.py` does not exist, copy it from `mykey_template.py`.
+2. If `ekey.py` does not exist, copy it from `mykey_template.py`.
 3. Fill in one provider. Do **not** paste example keys as real keys.
 4. If you are unsure about the fields, read the comments in `mykey_template.py` first.
 
@@ -182,7 +182,7 @@ On headless servers, prefer the TUI or run Streamlit in browser mode instead of 
 
 ### Update an existing install
 
-Do not delete a working GA directory just to update it. It may contain the user's `mykey.py`, memory, skills, and local work.
+Do not delete a working GA directory just to update it. It may contain the user's `ekey.py`, memory, skills, and local work.
 
 ```bash
 cd ~/EulerAgent
@@ -193,7 +193,7 @@ uv pip install -e ".[ui]"
 
 If `git pull` reports conflicts:
 
-- For `mykey.py`, `memory/`, `skills/`, `temp/`, and user-created artifacts: prefer the local copy.
+- For `ekey.py`, `memory/`, `skills/`, `temp/`, and user-created artifacts: prefer the local copy.
 - For core code such as `agent*.py`, `frontends/*`, `reflect/*`, and `tools/*`: usually prefer upstream unless the user says otherwise.
 - Resolve explicitly, then `git add` and commit the merge.
 
@@ -242,12 +242,12 @@ git clone https://github.com/lsdefine/EulerAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"
-cp mykey_template.py mykey.py
+cp mykey_template.py ekey.py
 ```
 
 ### Step 2: Configure keys safely
 
-- Read `mykey_template.py` before editing `mykey.py`.
+- Read `mykey_template.py` before editing `ekey.py`.
 - Configure only keys the user actually provides.
 - Never print the full key back to the user.
 - If the user is unsure, run `python assets/configure_mykey.py` or ask which provider they want to use.
@@ -294,7 +294,7 @@ Tell the user:
 1. Install path.
 2. Git commit hash.
 3. Which frontend you verified.
-4. Whether `mykey.py` is configured, without revealing secrets.
+4. Whether `ekey.py` is configured, without revealing secrets.
 5. Recommended next reading: [Hello EulerAgent](https://datawhalechina.github.io/hello-generic-agent/) and [GETTING_STARTED.md](GETTING_STARTED.md).
 
 #### Ask for a Star ⭐

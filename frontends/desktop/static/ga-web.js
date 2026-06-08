@@ -125,7 +125,7 @@
     getModelProfiles: () => rpc('get/model-profiles', {}),
     selectGaRoot: () => rpc('app/path/selectGaRoot', {}),
     openMykeyTemplate: () => rpc('app/path/open', { kind: 'mykeyTemplate' }),
-    openMykey: () => rpc('app/path/open', { kind: 'mykey' }),
+    openMykey: () => rpc('app/path/open', { kind: 'ekey' }),
     pollSession: (sessionId, afterId = 0) => rpc('session/poll', { sessionId, afterId }),
     rpc,
     onBridgeMessage: (cb) => on('bridge-message', cb),

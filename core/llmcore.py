@@ -3,28 +3,28 @@ from datetime import datetime
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 _RESP_CACHE_KEY = str(uuid.uuid4())
 
-def _load_mykeys():
-    global _mykey_path
+def _load_ekeys():
+    global _ekey_path
     try:
-        import mykey; importlib.reload(mykey); _mykey_path = mykey.__file__
-        return {k: v for k, v in vars(mykey).items() if not k.startswith('_')}
+        import ekey; importlib.reload(ekey); _ekey_path = ekey.__file__
+        return {k: v for k, v in vars(ekey).items() if not k.startswith('_')}
     except ImportError: pass
-    _mykey_path = p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mykey.json')
-    if not os.path.exists(p): raise Exception('[ERROR] mykey.py or mykey.json not found, please create one from mykey_template.')
+    _ekey_path = p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ekey.json')
+    if not os.path.exists(p): raise Exception('[ERROR] ekey.py or ekey.json not found, please create one from ekey_template.')
     with open(p, encoding='utf-8') as f: return json.load(f)
 
-_mykey_path = _mykey_mtime = None
-def reload_mykeys():
-    global _mykey_mtime
-    mt = os.stat(_mykey_path).st_mtime_ns if _mykey_path else -1
-    if mt == _mykey_mtime: return globals().get('mykeys', {}), False
-    mk = _load_mykeys(); _mykey_mtime = os.stat(_mykey_path).st_mtime_ns
-    print(f'[Info] Load mykeys from {_mykey_path}')
-    globals().update(mykeys=mk)
+_ekey_path = _ekey_mtime = None
+def reload_ekeys():
+    global _ekey_mtime
+    mt = os.stat(_ekey_path).st_mtime_ns if _ekey_path else -1
+    if mt == _ekey_mtime: return globals().get('ekeys', {}), False
+    mk = _load_ekeys(); _ekey_mtime = os.stat(_ekey_path).st_mtime_ns
+    print(f'[Info] Load ekeys from {_ekey_path}')
+    globals().update(ekeys=mk)
     return mk, True
 
 def __getattr__(name):  # once guard in PEP 562
-    if name == 'mykeys': return reload_mykeys()[0]
+    if name == 'ekeys': return reload_ekeys()[0]
     raise AttributeError(f"module 'llmcore' has no attribute {name}")
 
 def compress_history_tags(messages, keep_recent=10, max_len=800, force=False, interval=5):
@@ -1016,8 +1016,8 @@ class NativeToolClient:
         return resp
 
 def resolve_session(cfg_name):
-    cfg = reload_mykeys()[0].get(cfg_name)
-    if not cfg: raise ValueError(f"Config '{cfg_name}' not in mykey")
+    cfg = reload_ekeys()[0].get(cfg_name)
+    if not cfg: raise ValueError(f"Config '{cfg_name}' not in ekey")
     if 'native' in cfg_name: return (NativeClaudeSession if 'claude' in cfg_name else NativeOAISession)(cfg=cfg)
     if 'claude' in cfg_name: return ClaudeSession(cfg=cfg)
     return LLMSession(cfg=cfg) if 'oai' in cfg_name else None

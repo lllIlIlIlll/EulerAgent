@@ -22,7 +22,7 @@
 
 - Python 3.8+
 - 本项目完整代码
-- LLM API 密钥（Claude/OpenAI 等，已在 `llmcore/mykeys` 中配置）
+- LLM API 密钥（Claude/OpenAI 等，已在 `llmcore/ekeys` 中配置）
 
 ### 安装依赖
 
@@ -162,7 +162,7 @@ def handle(data):
 
 ### 配置飞书凭证
 
-编辑项目根目录的 `mykey.py`，添加：
+编辑项目根目录的 `ekey.py`，添加：
 
 ```python
 # 飞书应用凭证
@@ -177,7 +177,7 @@ fs_allowed_users = [
 
 ### 确认 LLM 配置
 
-确保 `llmcore/mykeys` 中已配置 LLM API 密钥：
+确保 `llmcore/ekeys` 中已配置 LLM API 密钥：
 
 ```python
 # 示例：Claude API
@@ -260,7 +260,7 @@ App ID: cli_xxxxxxxxxxxxxxxx
 
 ### Q: 提示「invalid app_id」
 
-**A:** 检查 `mykey.py` 中的 `fs_app_id` 是否正确复制（包含 `cli_` 前缀）
+**A:** 检查 `ekey.py` 中的 `fs_app_id` 是否正确复制（包含 `cli_` 前缀）
 
 ### Q: 如何获取自己的 Open ID？
 

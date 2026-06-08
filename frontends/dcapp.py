@@ -14,7 +14,7 @@ from chatapp_common import (
     HELP_TEXT, FILE_HINT, format_restore,
     _handle_continue_frontend, _reset_conversation,
 )
-from llmcore import mykeys
+from llmcore import ekeys
 
 try:
     import discord
@@ -23,8 +23,8 @@ except Exception:
     sys.exit(1)
 
 agent = EulerAgent(); agent.verbose = False
-BOT_TOKEN = str(mykeys.get("discord_bot_token", "") or "").strip()
-ALLOWED = {str(x).strip() for x in mykeys.get("discord_allowed_users", []) if str(x).strip()}
+BOT_TOKEN = str(ekeys.get("discord_bot_token", "") or "").strip()
+ALLOWED = {str(x).strip() for x in ekeys.get("discord_allowed_users", []) if str(x).strip()}
 USER_TASKS = {}
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMP_DIR = os.path.join(PROJECT_ROOT, "temp")
@@ -75,7 +75,7 @@ class DiscordApp(AgentChatMixin):
         intents.message_content = True
         intents.guilds = True
         intents.dm_messages = True
-        proxy = str(mykeys.get("proxy", "") or "").strip() or None
+        proxy = str(ekeys.get("proxy", "") or "").strip() or None
         self.client = discord.Client(intents=intents, proxy=proxy)
         self.background_tasks = set()
         self._channel_cache = OrderedDict()  # chat_id -> channel/user object (LRU, max 500)

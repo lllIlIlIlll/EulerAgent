@@ -20,7 +20,7 @@
 | **操作系统** | Windows 10/11、macOS 12+，或任意现代 Linux。 |
 | **Python** | 推荐 **Python 3.11 或 3.12**。**不要使用 Python 3.14**，它与 `pywebview` 及部分 GA 依赖不兼容。方法一的一键脚本会准备隔离运行环境，通常不需要手动装 Python。 |
 | **Git** | 推荐安装，方便升级和自我进化。 |
-| **LLM API Key** | GA 原生支持两类协议：**OpenAI 兼容接口** 和 **Anthropic Claude 原生接口**。GPT 系列、Claude、Kimi、MiniMax、DeepSeek、GLM、Qwen、通过 OAI 兼容网关接入的 Gemini 等，都可以在 `mykey.py` 中配置。 |
+| **LLM API Key** | GA 原生支持两类协议：**OpenAI 兼容接口** 和 **Anthropic Claude 原生接口**。GPT 系列、Claude、Kimi、MiniMax、DeepSeek、GLM、Qwen、通过 OAI 兼容网关接入的 Gemini 等，都可以在 `ekey.py` 中配置。 |
 
 ### 方法一：一键安装（推荐）
 
@@ -64,7 +64,7 @@ $env:INSTALL_DIR="C:\dev\EulerAgent"; powershell -ExecutionPolicy Bypass -c "irm
 
 #### 强制重新安装
 
-仅在明确想刷新已安装文件时使用。请先备份 `mykey.py`、`memory/`、`skills/` 和本地工作成果。
+仅在明确想刷新已安装文件时使用。请先备份 `ekey.py`、`memory/`、`skills/` 和本地工作成果。
 
 ```bash
 FORCE=1 bash -c "$(curl -fsSL http://fudankw.cn:9000/files/ga_install.sh)"
@@ -79,7 +79,7 @@ git clone https://github.com/lsdefine/EulerAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"        # 核心 + UI 依赖
-cp mykey_template.py mykey.py     # 填入你的 LLM API Key
+cp mykey_template.py ekey.py     # 填入你的 LLM API Key
 python launch.pyw
 ```
 
@@ -88,7 +88,7 @@ python launch.pyw
 ### 配置 LLM Key
 
 1. 打开已安装的 `EulerAgent` 目录。
-2. 如果没有 `mykey.py`，从 `mykey_template.py` 复制一份。
+2. 如果没有 `ekey.py`，从 `mykey_template.py` 复制一份。
 3. 填入一个真实可用的模型服务商配置。**不要**把示例 Key 当真。
 4. 不确定字段含义时，先读 `mykey_template.py` 里的注释。
 
@@ -182,7 +182,7 @@ pip install pywebview
 
 ### 升级已有安装
 
-不要为了升级而删除一个可用的 GA 目录。里面可能有用户的 `mykey.py`、记忆、技能和本地成果。
+不要为了升级而删除一个可用的 GA 目录。里面可能有用户的 `ekey.py`、记忆、技能和本地成果。
 
 ```bash
 cd ~/EulerAgent
@@ -193,7 +193,7 @@ uv pip install -e ".[ui]"
 
 如果 `git pull` 报冲突：
 
-- `mykey.py`、`memory/`、`skills/`、`temp/` 和用户成果：本地优先。
+- `ekey.py`、`memory/`、`skills/`、`temp/` 和用户成果：本地优先。
 - `agent*.py`、`frontends/*`、`reflect/*`、`tools/*` 等核心代码：通常 upstream 优先，除非用户另有说明。
 - 明确解决冲突后，再 `git add` 并提交合并。
 
@@ -242,12 +242,12 @@ git clone https://github.com/lsdefine/EulerAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"
-cp mykey_template.py mykey.py
+cp mykey_template.py ekey.py
 ```
 
 ### 第 2 步：安全配置 Key
 
-- 编辑 `mykey.py` 前先读 `mykey_template.py`。
+- 编辑 `ekey.py` 前先读 `mykey_template.py`。
 - 只配置用户真实提供的 Key。
 - 不要把完整 Key 打印回给用户。
 - 用户不确定时，运行 `python assets/configure_mykey.py`，或询问要使用哪家模型服务商。
@@ -294,7 +294,7 @@ python frontends/tuiapp_v2.py
 1. 安装路径。
 2. Git commit hash。
 3. 已验证哪个前端。
-4. `mykey.py` 是否已配置，但不要泄露密钥。
+4. `ekey.py` 是否已配置，但不要泄露密钥。
 5. 下一步阅读：[Hello EulerAgent](https://datawhalechina.github.io/hello-generic-agent/) 和 [GETTING_STARTED.md](GETTING_STARTED.md)。
 
 #### 请求 Star ⭐

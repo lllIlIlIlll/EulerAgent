@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 EulerAgent — 交互式初始化向导 (configure.py)
-一键配置 LLM 模型 + 消息平台，自动生成 mykey.py
+一键配置 LLM 模型 + 消息平台，自动生成 ekey.py
 
 用法:
     python configure.py
@@ -23,7 +23,7 @@ C = {
 }
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MYKPY_PATH = os.path.join(PROJECT_ROOT, 'mykey.py')
+MYKPY_PATH = os.path.join(PROJECT_ROOT, 'ekey.py')
 
 # ── 模型厂商定义 ───────────────────────────────────────────────────────────
 
@@ -540,7 +540,7 @@ def banner():
     print(f"{C['cyan']}{C['bold']}")
     print("  ╔═══════════════════════════════════════════════════════════╗")
     print("  ║        EulerAgent — 交互式初始化向导 v1.2              ║")
-    print("  ║   一键配置 LLM 模型 + 消息平台，自动生成 mykey.py        ║")
+    print("  ║   一键配置 LLM 模型 + 消息平台，自动生成 ekey.py        ║")
     print("  ╚═══════════════════════════════════════════════════════════╝")
     print(f"{C['reset']}")
     print(f"{C['dim']}  项目目录: {PROJECT_ROOT}{C['reset']}")
@@ -948,7 +948,7 @@ def _feishu_scan(platform):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  生成 mykey.py
+#  生成 ekey.py
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _var_type_info(cfg):
@@ -965,10 +965,10 @@ def _var_type_info(cfg):
 
 
 def generate_mykey(llm_cfgs, platform_configs):
-    """生成 mykey.py 内容"""
+    """生成 ekey.py 内容"""
     lines = []
     lines.append("# ══════════════════════════════════════════════════════════════════════════════")
-    lines.append(f"#  EulerAgent — mykey.py (由 configure.py 自动生成 @ {datetime.now().strftime('%Y-%m-%d %H:%M')})")
+    lines.append(f"#  EulerAgent — ekey.py (由 configure.py 自动生成 @ {datetime.now().strftime('%Y-%m-%d %H:%M')})")
     lines.append("# ══════════════════════════════════════════════════════════════════════════════")
     lines.append("")
     lines.append("# ── 停止符 ──────────────────────────────────────────────────────────────────")
@@ -1064,7 +1064,7 @@ def _write_platform_value(lines, key, val):
 
 
 def _parse_existing_mykey():
-    """解析已有 mykey.py，返回 (model_names, platform_infos)
+    """解析已有 ekey.py，返回 (model_names, platform_infos)
 
     llm_cfgs: [{'name': str, 'type': str, ...}]  — 模型配置字典列表
     platform_infos: [{'id': str, 'vars': [{'key': str, 'val': ...}]}]  — 平台信息
@@ -1098,7 +1098,7 @@ def _parse_existing_mykey():
 
 
 def _backup_with_name(model_names, platform_ids):
-    """按 mykey+模型名+机器人名 格式备份旧 mykey.py"""
+    """按 mykey+模型名+机器人名 格式备份旧 ekey.py"""
     parts = ['mykey']
     for m in model_names[:3]:
         parts.append(m.replace('/', '-').replace('\\', '-'))
@@ -1144,7 +1144,7 @@ def main():
         print(f"  {C['dim']}  当前: 模型=[{cur_models}], 平台=[{cur_platforms}]{C['reset']}")
 
         mode = ask_choice(
-            "检测到已有 mykey.py，请选择操作",
+            "检测到已有 ekey.py，请选择操作",
             [
                 {'id': 'modify', 'name': '修改现有配置', 'desc': '保留未改部分，只重新配置选定项'},
                 {'id': 'new', 'name': '新建配置（备份旧文件）', 'desc': '备份为 mykey+模型+平台.py，然后全新配置'},
@@ -1211,7 +1211,7 @@ def main():
             if ask_yesno("是否继续配置 LLM 模型？", default=True):
                 llm_cfgs = _do_llm()
 
-    # ── 生成 mykey.py ──
+    # ── 生成 ekey.py ──
     if not llm_cfgs and not platform_configs:
         print(f"\n  {C['yellow']}⚠ 没有配置任何内容，退出。{C['reset']}")
         sys.exit(0)
@@ -1220,14 +1220,14 @@ def main():
 
     # 备份旧文件
     if os.path.exists(MYKPY_PATH):
-        backup = os.path.join(PROJECT_ROOT, f'mykey.py.bak.{datetime.now().strftime("%Y%m%d_%H%M%S")}')
+        backup = os.path.join(PROJECT_ROOT, f'ekey.py.bak.{datetime.now().strftime("%Y%m%d_%H%M%S")}')
         shutil.copy2(MYKPY_PATH, backup)
         print(f"\n  {C['green']}✓ 旧配置已备份至:{C['reset']} {C['dim']}{backup}{C['reset']}")
 
     # 写入
     with open(MYKPY_PATH, 'w', encoding='utf-8') as f:
         f.write(content)
-    print(f"\n  {C['green']}✓ mykey.py 已生成!{C['reset']}")
+    print(f"\n  {C['green']}✓ ekey.py 已生成!{C['reset']}")
 
     # ── 完成提示 ──
     print(f"\n{C['bold']}{C['green']}╔══════════════════════════════════════╗")

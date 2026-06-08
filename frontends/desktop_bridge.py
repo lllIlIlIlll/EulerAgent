@@ -88,7 +88,7 @@ class AgentManager:
 
     @property
     def mykey_path(self) -> str:
-        return str(Path(self.ga_root) / "mykey.txt")
+        return str(Path(self.ga_root) / "ekey.txt")
 
     def ensure_ga_import_path(self) -> Path:
         root = Path(self.ga_root).resolve()
@@ -556,8 +556,8 @@ async def cancel_handler(request):
 async def path_open_handler(request):
     data = await read_json(request)
     kind = data.get("kind", "")
-    if kind == "mykey":
-        target = Path(manager.ga_root) / "mykey.py"
+    if kind == "ekey":
+        target = Path(manager.ga_root) / "ekey.py"
     else:
         target = Path(data.get("path") or data.get("target") or manager.ga_root)
     target = target.resolve()

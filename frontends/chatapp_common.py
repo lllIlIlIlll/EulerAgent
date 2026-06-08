@@ -238,10 +238,10 @@ def ensure_single_instance(port, label):
 def require_runtime(agent, label, **required):
     missing = [k for k, v in required.items() if not v]
     if missing:
-        print(f"[{label}] ERROR: please set {', '.join(missing)} in mykey.py or mykey.json")
+        print(f"[{label}] ERROR: please set {', '.join(missing)} in ekey.py or ekey.json")
         sys.exit(1)
     if agent.llmclient is None:
-        print(f"[{label}] ERROR: no usable LLM backend found in mykey.py or mykey.json")
+        print(f"[{label}] ERROR: no usable LLM backend found in ekey.py or ekey.json")
         sys.exit(1)
 
 

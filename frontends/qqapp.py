@@ -4,7 +4,7 @@ from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.agentmain import EulerAgent
 from chatapp_common import AgentChatMixin, ensure_single_instance, public_access, redirect_log, require_runtime, split_text
-from llmcore import mykeys
+from llmcore import ekeys
 
 try:
     import botpy
@@ -14,9 +14,9 @@ except Exception:
     sys.exit(1)
 
 agent = EulerAgent(); agent.verbose = False
-APP_ID = str(mykeys.get("qq_app_id", "") or "").strip()
-APP_SECRET = str(mykeys.get("qq_app_secret", "") or "").strip()
-ALLOWED = {str(x).strip() for x in mykeys.get("qq_allowed_users", []) if str(x).strip()}
+APP_ID = str(ekeys.get("qq_app_id", "") or "").strip()
+APP_SECRET = str(ekeys.get("qq_app_secret", "") or "").strip()
+ALLOWED = {str(x).strip() for x in ekeys.get("qq_allowed_users", []) if str(x).strip()}
 PROCESSED_IDS, USER_TASKS = deque(maxlen=1000), {}
 SEQ_LOCK, MSG_SEQ = threading.Lock(), 1
 

@@ -3,8 +3,8 @@ from io import BytesIO
 from pathlib import Path
 
 # ============ 用户配置区（从 template 拷贝后只需改这里）============
-CLAUDE_CONFIG_KEY = 'claude_config141'   # mykey.py 中 Claude 配置的变量名
-OPENAI_CONFIG_KEY = 'oai_config1'        # mykey.py 中 OpenAI 配置的变量名
+CLAUDE_CONFIG_KEY = 'claude_config141'   # ekey.py 中 Claude 配置的变量名
+OPENAI_CONFIG_KEY = 'oai_config1'        # ekey.py 中 OpenAI 配置的变量名
 MODELSCOPE_API_KEY = ''                  # 直接填你的 ModelScope token
 DEFAULT_BACKEND = 'claude'               # 默认后端: 'claude' / 'openai' / 'modelscope'
 # =================================================================
@@ -72,8 +72,8 @@ def _prepare_image(image_input, max_pixels=1440000):
     return b64
 
 def _load_config():
-    import mykey
-    return mykey
+    import ekey
+    return ekey
 
 def _call_claude(b64, prompt, timeout, max_tokens=1024):
     mk = _load_config()

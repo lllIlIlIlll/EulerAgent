@@ -20,7 +20,7 @@ from core.agentmain import EulerAgent
 from chatapp_common import (AgentChatMixin, FILE_HINT, build_done_text, clean_reply,
                             ensure_single_instance, extract_files, public_access,
                             redirect_log, require_runtime, split_text, strip_files)
-from llmcore import mykeys
+from llmcore import ekeys
 
 try:
     from wecom_aibot_sdk import WSClient, generate_req_id
@@ -29,10 +29,10 @@ except Exception:
     sys.exit(1)
 
 # ── Config ──────────────────────────────────────────────────────────
-BOT_ID    = str(mykeys.get("wecom_bot_id", "") or "").strip()
-SECRET    = str(mykeys.get("wecom_secret", "") or "").strip()
-WELCOME   = str(mykeys.get("wecom_welcome_message", "") or "").strip()
-ALLOWED   = {str(x).strip() for x in mykeys.get("wecom_allowed_users", []) if str(x).strip()}
+BOT_ID    = str(ekeys.get("wecom_bot_id", "") or "").strip()
+SECRET    = str(ekeys.get("wecom_secret", "") or "").strip()
+WELCOME   = str(ekeys.get("wecom_welcome_message", "") or "").strip()
+ALLOWED   = {str(x).strip() for x in ekeys.get("wecom_allowed_users", []) if str(x).strip()}
 PORT      = 19531                # single-instance lock port
 TEMP_DIR  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp")
 MEDIA_DIR = os.path.join(TEMP_DIR, "media")

@@ -1,9 +1,9 @@
 # ══════════════════════════════════════════════════════════════════════════════
-#  EulerAgent — mykey.py configuration template (copy to mykey.py and fill in)
+#  EulerAgent — ekey.py configuration template (copy to ekey.py and fill in)
 # ══════════════════════════════════════════════════════════════════════════════
 #
 #  Quick start:
-#    1. Copy this file to mykey.py
+#    1. Copy this file to ekey.py
 #    2. Uncomment one of the configs below and fill in your apikey
 #    3. Run `python agentmain.py` or `python launch.pyw`
 #

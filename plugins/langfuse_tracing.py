@@ -1,4 +1,4 @@
-"""Langfuse tracing via hook system. Self-activates on import if langfuse_config exists in mykey.
+"""Langfuse tracing via hook system. Self-activates on import if langfuse_config exists in ekey.
 
 Replaces old monkey-patch approach with hooks on:
   - agent_before / agent_after  -> agent trace

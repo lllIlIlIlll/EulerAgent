@@ -4,7 +4,7 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.agentmain import EulerAgent
 from chatapp_common import AgentChatMixin, ensure_single_instance, public_access, redirect_log, require_runtime, split_text
-from llmcore import mykeys
+from llmcore import ekeys
 
 try:
     from dingtalk_stream import AckMessage, CallbackHandler, Credential, DingTalkStreamClient
@@ -14,9 +14,9 @@ except Exception:
     sys.exit(1)
 
 agent = EulerAgent(); agent.verbose = False
-CLIENT_ID = str(mykeys.get("dingtalk_client_id", "") or "").strip()
-CLIENT_SECRET = str(mykeys.get("dingtalk_client_secret", "") or "").strip()
-ALLOWED = {str(x).strip() for x in mykeys.get("dingtalk_allowed_users", []) if str(x).strip()}
+CLIENT_ID = str(ekeys.get("dingtalk_client_id", "") or "").strip()
+CLIENT_SECRET = str(ekeys.get("dingtalk_client_secret", "") or "").strip()
+ALLOWED = {str(x).strip() for x in ekeys.get("dingtalk_allowed_users", []) if str(x).strip()}
 USER_TASKS = {}
 
 

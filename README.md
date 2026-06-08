@@ -154,7 +154,7 @@ git clone https://github.com/lsdefine/GenericAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"          # Core + UI dependencies
-cp mykey_template.py mykey.py      # Fill in your LLM API key
+cp mykey_template.py ekey.py      # Fill in your LLM API key
 python launch.pyw
 ```
 
@@ -524,7 +524,7 @@ git clone https://github.com/lsdefine/GenericAgent.git
 cd EulerAgent
 uv venv
 uv pip install -e ".[ui]"          # 核心 + UI 依赖
-cp mykey_template.py mykey.py      # 填入你的 LLM API Key
+cp mykey_template.py ekey.py      # 填入你的 LLM API Key
 python launch.pyw
 ```
 

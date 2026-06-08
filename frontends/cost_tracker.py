@@ -43,7 +43,7 @@ class TokenStats:
 # `/cost` compares actual-history chars against that cap for consistent units.
 def context_window_chars(backend) -> int:
     """`context_win * 3` — the char cap before `trim_messages_history` kicks
-    in. Reads dynamically so a `mykey.py` override propagates. Returns 0 on
+    in. Reads dynamically so a `ekey.py` override propagates. Returns 0 on
     bad/missing backend so the caller can hide the row."""
     try:
         return int(getattr(backend, 'context_win', 0)) * 3

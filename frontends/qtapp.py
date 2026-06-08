@@ -2429,7 +2429,7 @@ def main():
         QMessageBox.critical(
             None,
             "未配置 LLM",
-            "未在 mykey.py 中发现任何可用的 LLM 接口配置，\n程序将在无 LLM 模式下运行。",
+            "未在 ekey.py 中发现任何可用的 LLM 接口配置，\n程序将在无 LLM 模式下运行。",
         )
     else:
         threading.Thread(target=agent.run, daemon=True).start()

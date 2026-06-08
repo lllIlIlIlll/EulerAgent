@@ -801,7 +801,7 @@ ANTHROPIC_SELECTBOX_SCRIPT = """
 def init():
     agent = EulerAgent()
     if agent.llmclient is None:
-        st.error("⚠️ 未配置任何可用的 LLM 接口，请在 mykey.py 中添加 sider_cookie 或 oai_apikey+oai_apibase 等信息后重启。")
+        st.error("⚠️ 未配置任何可用的 LLM 接口，请在 ekey.py 中添加 sider_cookie 或 oai_apikey+oai_apibase 等信息后重启。")
         st.stop()
     else:
         threading.Thread(target=agent.run, daemon=True).start()
