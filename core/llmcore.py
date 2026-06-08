@@ -124,7 +124,7 @@ def _parse_claude_sse(resp_lines):
         data_str = line[5:].lstrip()
         if data_str == "[DONE]": break
         try: evt = json.loads(data_str)
-        except Exception as e:
+        except json.JSONDecodeError as e:
             print(f"[SSE] JSON parse error: {e}, line: {data_str[:200]}")
             continue
         evt_type = evt.get("type", "")
