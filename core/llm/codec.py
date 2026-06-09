@@ -434,7 +434,7 @@ def _parse_text_tool_calls(content):
             idx = content.index(_jp); raw = json.loads(content[idx:])
             tcs = [MockToolCall(b["name"], b.get("input", {}), id=b.get("id", "")) for b in raw if b.get("type") == "tool_use"]
             return tcs, content[:idx].strip()
-        except json.JSONDecodeError: pass
+        except (json.JSONDecodeError, KeyError, TypeError, AttributeError): pass  # malformed model text → fall through
     # try XML tags: <tool_call>{"name":..., "arguments":...}</tool_call>
     _xp = r"<(?:tool_use|tool_call)>((?:(?!<(?:tool_use|tool_call)>).){15,}?)</(?:tool_use|tool_call)>"
     for s in re.findall(_xp, content, re.DOTALL):
@@ -442,6 +442,6 @@ def _parse_text_tool_calls(content):
             d = tryparse(s.strip()); name = d.get('name')
             args = d.get('arguments') or d.get('args') or d.get('input') or {}
             if name: tcs.append(MockToolCall(name, args))
-        except json.JSONDecodeError: pass
+        except (json.JSONDecodeError, AttributeError): pass  # tryparse may yield a non-dict
     if tcs: content = re.sub(_xp, "", content, flags=re.DOTALL).strip()
     return tcs, content
