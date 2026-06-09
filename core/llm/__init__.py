@@ -1,17 +1,17 @@
-"""LLM adapter package.
+"""LLM adapter package — public API aggregated from the layer modules.
 
-Strangler split in progress: the implementation still lives in `_legacy.py` and is
-re-exported here. Public symbols come through `from ._legacy import *`; a few private
-helpers are re-exported explicitly, and `__getattr__` delegates lazy module attributes
-(e.g. `ekeys`) to _legacy. An explicit `__all__` lands in the final stage, once symbols
-are spread across config/codec/wire/sessions/clients modules.
+Dependency order (acyclic): config / models / history → wire → codec → sessions → clients.
+`__getattr__` serves the lazy, mtime-guarded `ekeys` and any other config-owned name.
 """
-from ._legacy import *  # noqa: F401,F403
-from ._legacy import (  # private helpers referenced cross-module / by the test net
-    _msgs_claude2oai, _to_responses_input, _fix_messages,
-    _parse_claude_sse, _parse_openai_sse, _parse_text_tool_calls, _ensure_thinking_blocks,
-)
+from .config import reload_ekeys, safeprint
+from .models import model_caps
+from .history import compress_history_tags, _sanitize_leading_user_msg, trim_messages_history
+from .wire import auto_make_url, _record_usage, _stream_with_retry, _write_llm_log
+from .codec import *  # protocol codecs + Mock* + text tool parsing (codec defines __all__)
+from .sessions import BaseSession, ClaudeSession, LLMSession, NativeClaudeSession, NativeOAISession, _openai_stream
+from .clients import ToolClient, MixinSession, NativeToolClient, resolve_session, resolve_client, fast_ask
 
 def __getattr__(name):
-    from . import _legacy
-    return getattr(_legacy, name)
+    if name == 'ekeys': return reload_ekeys()[0]
+    from . import config
+    return getattr(config, name)
