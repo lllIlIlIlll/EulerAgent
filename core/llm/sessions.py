@@ -3,7 +3,7 @@
 BaseSession + Claude/LLM/Native sessions. Builds provider payloads and drives the
 wire transport, decoding via codec. Depends on config/wire/history/models/codec.
 """
-import json, threading, uuid
+import json, re, threading, uuid
 from .config import safeprint
 from .wire import auto_make_url, _stream_with_retry, _write_llm_log
 from .history import trim_messages_history
