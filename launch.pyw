@@ -14,7 +14,7 @@ def find_free_port(lo=18501, hi=18599):
 
 def get_screen_width():
     try: return ctypes.windll.user32.GetSystemMetrics(0)
-    except: return 1920
+    except (AttributeError, OSError): return 1920
 
 def start_streamlit(port):
     global proc

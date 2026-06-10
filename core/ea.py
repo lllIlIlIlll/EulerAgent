@@ -9,6 +9,27 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from agent_loop import BaseHandler, StepOutcome, json_default
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+_DANGER_PATTERNS = [
+    (re.compile(r'\brm\s+-\S*[rf]', re.I), 'rm recursive/force'),
+    (re.compile(r'\bmkfs\b|\bdd\s+if=', re.I), 'disk overwrite'),
+    (re.compile(r':\s*\(\s*\)\s*\{.*:\s*\|\s*:', re.S), 'fork bomb'),
+    (re.compile(r'\b(shutdown|reboot|halt|poweroff)\b', re.I), 'system power'),
+    (re.compile(r'\bgit\s+push\b.*(--force|\s-f\b)', re.I), 'git force push'),
+    (re.compile(r'(curl|wget)\b[^\n|]*\|\s*(sudo\s+)?(ba)?sh\b', re.I), 'pipe to shell'),
+    (re.compile(r'\bshutil\.rmtree\b'), 'shutil.rmtree'),
+]
+def _danger_match(code):
+    return next((d for p, d in _DANGER_PATTERNS if p.search(code or '')), None)
+
+def _audit_code_run(code_type, code, cwd, turn, risk):
+    """Append-only audit trail for every code execution; high-risk ones tagged for triage."""
+    try:
+        audit_dir = os.path.join(script_dir, '../temp/audit'); os.makedirs(audit_dir, exist_ok=True)
+        tag = f'HIGH_RISK:{risk}' if risk else 'NORMAL'
+        with open(os.path.join(audit_dir, 'code_run.log'), 'a', encoding='utf-8', errors='replace') as f:
+            f.write(f"=== {datetime.now():%Y-%m-%d %H:%M:%S} | turn={turn} | {code_type} | {tag} | cwd={cwd} ===\n{code}\n\n")
+    except OSError: pass
+
 def code_run(code, code_type="python", timeout=60, cwd=None, code_cwd=None, stop_signal=None, maxlen=10000):
     """代码执行器
     python: 运行复杂的 .py 脚本（文件模式）
@@ -291,6 +312,12 @@ class EulerAgentHandler(BaseHandler):
         cwd = os.path.normpath(os.path.abspath(raw_path))
         code_cwd = os.path.normpath(self.cwd)
         maxlen = 10000 // args.get('_tool_num', 1)
+        danger = _danger_match(code)
+        _audit_code_run(code_type, code, cwd, self.current_turn, danger)
+        if danger and getattr(self.parent, 'unattended', False):
+            msg = f"[策略拦截] 检测到高危操作({danger})，无人值守模式下禁止自动执行。如确需执行，请 ask_user 请求用户手动确认。"
+            yield f"[Blocked] {msg}\n"
+            return StepOutcome({"status": "error", "msg": msg}, next_prompt=self._get_anchor_prompt(skip=args.get('_index', 0) > 0))
         if code_type == 'python' and args.get("inline_eval"):
             ns = {'handler':self, 'parent':self.parent, 'history':json.dumps(self.parent.llmclient.backend.history)}
             old_cwd = os.getcwd()

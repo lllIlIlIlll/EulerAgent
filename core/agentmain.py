@@ -59,7 +59,7 @@ class EulerAgent:
         self.task_queue = queue.Queue() 
         self.is_running = False; self.stop_sig = False; self.llm_no = 0;  
         self.inc_out = False; self.verbose = True; self.show_mode = 'text'
-        self.peer_hint = True
+        self.peer_hint = True; self.unattended = False  # task/reflect set True → block high-risk code_run
         self.log_path = os.path.join(script_dir, f'../temp/model_responses/model_responses_{int(time.time()*1e6)%1000000:06d}.txt')
         self.load_llm_sessions()
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     threading.Thread(target=agent.run, daemon=True).start()
 
     if args.task:
-        agent.peer_hint = False
+        agent.peer_hint = False; agent.unattended = True
         agent.task_dir = d = os.path.join(script_dir, f'../temp/{args.task}'); nround = ''
         infile = os.path.join(d, 'input.txt')
         if args.input:
@@ -237,7 +237,7 @@ if __name__ == '__main__':
             else: break
             nround = nround + 1 if isinstance(nround, int) else 1
     elif args.reflect:
-        agent.peer_hint = False
+        agent.peer_hint = False; agent.unattended = True
         import importlib.util
         spec = importlib.util.spec_from_file_location('reflect_script', args.reflect)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
