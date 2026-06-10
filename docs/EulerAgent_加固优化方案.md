@@ -15,16 +15,18 @@
 
 优先级总表：
 
-| 级别 | 编号 | 项 | 改动半径 |
-|---|---|---|---|
-| **P0** | F1 | `.gitignore` 补 `ekey.json` —— 当前明文凭证可被误提交 | 1 行 |
-| **P0** | F2 | TMWebDriver 三个共享 dict 加锁 | 单文件局部 |
-| **P0** | F3 | `/session.k=v` 字段白名单 | 单函数 |
-| **P1** | F4 | 不可逆/外向操作确认闸门 + `code_run` 审计日志 | 新增一个边界点 |
-| **P1** | F5 | 按 failure-radius 拆分 blanket `except Exception` | 分散但每处 1-2 行 |
-| **P2** | F6 | TMWebDriver `/link` + agent_bbs 收紧网络暴露面 | 局部 |
-| **P2** | F7 | inline_eval 去全局 `os.chdir`；loop 内 `json.loads` 容错 | 两处局部 |
-| **P3** | F8 | 日志路径双轨统一；`file_access_stats` 并发安全；DEBUG 噪声 | 杂项 |
+| 状态 | 级别 | 编号 | 项 | 改动半径 |
+|---|---|---|---|---|
+| ✅ | P0 | F1 | `.gitignore` 补 `ekey.json` —— 当前明文凭证可被误提交 | 1 行 |
+| ✅ | P0 | F2 | TMWebDriver 共享 dict 加锁 | 单文件局部 |
+| ✅ | P0 | F3 | `/session.k=v` 字段白名单 | 单函数 |
+| ✅ | P1 | F4 | `code_run` 审计日志 + 无人值守高危闸门 | 新增一个边界点 |
+| ✅ | P1 | F5 | 裸 `except:` 收敛为精确异常类型 | 分散但每处 1 行 |
+| ⬜ | P2 | F6 | TMWebDriver `/link` + agent_bbs 收紧网络暴露面 | 局部 |
+| ⬜ | P2 | F7 | inline_eval 去全局 `os.chdir`；loop 内 `json.loads` 容错 | 两处局部 |
+| ⬜ | P3 | F8 | 日志路径双轨统一；`file_access_stats` 并发安全；DEBUG 噪声 | 杂项 |
+
+> F1–F5 已实现（commit `1a2af2f` + `b7160cf`）。下文各节"方案"为原始设计；F4/F5 的**实际落地说明**见对应章节末尾。
 
 ---
 
@@ -94,7 +96,12 @@
 3. **来源染色（可选增强）**：在 `turn_end_callback`（[ea.py:547](../core/ea.py)）标记"本轮读过 web/bbs 等外部来源"，若紧接着的下一轮就 `code_run`，在审计日志里标 `HIGH_RISK`。
 
 **与原则的关系**：能力不减，但"失败/越权可快速定位"——正是 CONTRIBUTING 第 4 条。
-**改动半径**：审计日志是单点新增；闸门复用 `ask_user`，集中在 `do_code_run` 一处判断。
+**改动半径**：审计日志是单点新增；闸门集中在 `do_code_run` 一处判断。
+
+> **实际落地（commit `b7160cf`）**：
+> - 审计：`_audit_code_run` 把每次执行（含 inline_eval）写入 `temp/audit/code_run.log`，含时间/turn/类型/`HIGH_RISK:<原因>` 或 `NORMAL`/cwd/代码全文。
+> - 闸门：`_danger_match` 用高确信正则（`rm -rf`、`mkfs`/`dd`、fork bomb、`shutdown`、`git push --force`、`curl|sh`、`shutil.rmtree`）。命中且 `parent.unattended`（`--task`/`--reflect` 置位）时**直接返回 error 拒绝执行**，提示 LLM 改用 `ask_user`；交互模式照常执行但留审计。
+> - **为何不用 `ask_user` 弹确认**：`ask_user` 会 `should_exit` 中断循环等待人答，回答后新一轮仍会再次命中闸门 → 确认续接需要"放行态"语义，改动半径大且要前端配合。无人值守硬拦截在不在场时同样生效，更符合"独立于 LLM 的策略"目标，且零死循环风险。
 
 ---
 
@@ -109,6 +116,8 @@
 - 收敛 `reflect/scheduler.py:59`、`:117` 等**裸 `except:`** 为具体异常类型（已有几处做了 `except (ValueError, IndexError)`，目标是全一致）。
 
 **改动半径**：分散但每处 1-2 行；不改控制流，只改"吞 vs 抛 + 日志级别"。
+
+> **实际落地（commit `b7160cf`）**：本次只收敛了**裸 `except:`**（会吞 `KeyboardInterrupt`/`SystemExit` 的真 bug）三处 → 精确类型：`langfuse_tracing.py`(JSONDecodeError)、`reflect/scheduler.py`(ValueError)、`launch.pyw`(AttributeError,OSError)。`web_scan`/`web_execute_js`/`do_file_write` 等 `except Exception` 评估后**保留**——它们处在工具边界，把失败作为 error 返回给 LLM 决策是合理的"预期失败"，且已用 `format_error` 输出 `文件:行` 便于定位。如需进一步区分"程序员错误响亮崩"，建议作为独立 backlog 推进，避免一次性扩大改动半径。
 
 ---
 
