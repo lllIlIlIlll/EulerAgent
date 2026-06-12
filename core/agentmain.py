@@ -1,4 +1,4 @@
-import os, sys, threading, queue, time, json, re, random, locale
+import os, sys, threading, queue, time, json, re, random, secrets, locale
 os.environ.setdefault('GA_LANG', 'zh' if any(k in (locale.getlocale()[0] or '').lower() for k in ('zh', 'chinese')) else 'en')
 if sys.stdout is None: sys.stdout = open(os.devnull, "w")
 elif hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(errors='replace')
@@ -34,7 +34,7 @@ cdp_cfg = os.path.join(script_dir, '../assets/tmwd_cdp_bridge/config.js')
 if not os.path.exists(cdp_cfg):
     try:
         os.makedirs(os.path.dirname(cdp_cfg), exist_ok=True)
-        open(cdp_cfg, 'w', encoding='utf-8').write(f"const TID = '__ljq_{hex(random.randint(0, 99999999))[2:8]}';")
+        open(cdp_cfg, 'w', encoding='utf-8').write(f"const TID = '__ljq_{secrets.token_hex(16)}';")
     except OSError as e: print(f'[WARN] CDP config init failed: {e} — advanced web features (tmwebdriver) will be unavailable.')
 
 def get_system_prompt():
@@ -53,7 +53,6 @@ _SESSION_SETTABLE = frozenset({
 class EulerAgent:
     def __init__(self):
         os.makedirs(os.path.join(script_dir, '../temp'), exist_ok=True)
-        self.lock = threading.Lock()
         self.task_dir = None
         self.history = []; self.handler = None; 
         self.task_queue = queue.Queue() 
@@ -81,6 +80,7 @@ class EulerAgent:
                     if isinstance(mixin._sessions[0], (NativeClaudeSession, NativeOAISession)): llm_sessions[i] = NativeToolClient(mixin)
                     else: llm_sessions[i] = ToolClient(mixin)
                 except Exception as e: print(f'\n\n\n[ERROR] Failed to init MixinSession with cfg {s["mixin_cfg"]}: {e}!!!\n\n')
+        if not llm_sessions: raise RuntimeError('ekey 中没有可用的 LLM 配置（条目名需含 api/config/cookie），参照 assets/template/ekey_template.py')
         self.llmclients = llm_sessions
         self.llmclient = self.llmclients[self.llm_no%len(self.llmclients)]
         if oldhistory: self.llmclient.backend.history = oldhistory
@@ -226,8 +226,13 @@ if __name__ == '__main__':
         with open(infile, encoding='utf-8') as f: raw = f.read()
         while True:
             dq = agent.put_task(raw, source='task')
-            while 'done' not in (item := dq.get(timeout=300)): 
-                if 'next' in item and random.random() < 0.95:  # 概率写一次中间结果
+            while True:
+                try: item = dq.get(timeout=300)
+                except queue.Empty:
+                    if agent.is_running: continue  # 工具静默长执行（如大 timeout 的 code_run），任务未死
+                    raise
+                if 'done' in item: break
+                if 'next' in item and random.random() < 0.05:  # 抽样写中间结果，降低整文件重写频率
                     with open(f'{d}/output{nround}.txt', 'w', encoding='utf-8') as f: f.write(item.get('next', ''))
             with open(f'{d}/output{nround}.txt', 'w', encoding='utf-8') as f: f.write(item['done'] + '\n\n[ROUND END]\n')
             consume_file(d, '_stop')  # 已经成功停下来了，避免打断下次reply

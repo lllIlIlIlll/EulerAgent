@@ -73,7 +73,7 @@ def agent_runner_loop(client, system_prompt, user_input, handler, tools_schema,
         else: tool_calls = [{'tool_name': tc.function.name, 'args': _safe_tool_args(tc.function.arguments), 'id': tc.id}
                           for tc in response.tool_calls]
        
-        tool_results = []; next_prompts = set(); exit_reason = {}
+        tool_results = []; next_prompts = {}; exit_reason = {}  # dict=有序去重，保证拼接顺序可复现
         for ii, tc in enumerate(tool_calls):
             tool_name, args, tid = tc['tool_name'], tc['args'], tc.get('id', '')
             if tool_name == 'no_tool': pass
@@ -98,10 +98,10 @@ def agent_runner_loop(client, system_prompt, user_input, handler, tools_schema,
             if outcome.data is not None and tool_name != 'no_tool': 
                 datastr = json.dumps(outcome.data, ensure_ascii=False, default=json_default) if type(outcome.data) in [dict, list] else str(outcome.data) 
                 tool_results.append({'tool_use_id': tid, 'content': datastr})
-            next_prompts.add(outcome.next_prompt)
+            next_prompts.setdefault(outcome.next_prompt)
         if len(next_prompts) == 0 or exit_reason:
             if len(handler._done_hooks) == 0 or exit_reason.get('result', '') == 'EXITED': break
-            next_prompts.add(handler._done_hooks.pop(0))
+            next_prompts.setdefault(handler._done_hooks.pop(0))
         next_prompt = handler.turn_end_callback(response, tool_calls, tool_results, turn, '\n'.join(next_prompts), exit_reason)
         _hook('turn_after', locals())
         messages = [{"role": "user", "content": next_prompt, "tool_results": tool_results}]   # just new message, history is kept in *Session

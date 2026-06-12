@@ -90,10 +90,10 @@ Follow these steps to think and act:
         system += f"{tool_instruction}"
         for m in history_msgs:
             role = "USER" if m['role'] == 'user' else "ASSISTANT"
-            user += f"=== {role} ===\n"
-            for tr in m.get('tool_results', []): user += f'<tool_result>{tr["content"]}</tool_result>\n'
-            user += str(m['content']) + "\n"
-            self.total_cd_tokens += len(user) // 3
+            part = f"=== {role} ===\n"
+            for tr in m.get('tool_results', []): part += f'<tool_result>{tr["content"]}</tool_result>\n'
+            part += str(m['content']) + "\n"
+            user += part; self.total_cd_tokens += len(part) // 3
         if self.total_cd_tokens > 9000: self.last_tools = ''
         user += "=== ASSISTANT ===\n" 
         return system + user

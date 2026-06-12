@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from agent_loop import BaseHandler, StepOutcome, json_default
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# 黑名单仅降低无人值守事故概率，不是安全边界（python -c / os.unlink 等等价物可绕过）
 _DANGER_PATTERNS = [
     (re.compile(r'\brm\s+-\S*[rf]', re.I), 'rm recursive/force'),
     (re.compile(r'\bmkfs\b|\bdd\s+if=', re.I), 'disk overwrite'),
@@ -118,6 +119,13 @@ def ask_user(question, candidates=None):
         "data": {"question": question, "candidates": candidates or []}}
 
 import simphtml
+_simphtml_mtime = 0
+def _hot_reload_simphtml():
+    global _simphtml_mtime
+    mt = os.path.getmtime(simphtml.__file__)
+    if mt != _simphtml_mtime:
+        if _simphtml_mtime: importlib.reload(simphtml)
+        _simphtml_mtime = mt
 driver = None
 def first_init_driver():
     global driver
@@ -156,8 +164,8 @@ def web_scan(tabs_only=False, switch_tab_id=None, text_only=False, maxlen=35000)
                 "active_tab": driver.default_session_id
             }
         }
-        if not tabs_only: 
-            importlib.reload(simphtml); result["content"] = simphtml.get_html(driver, cutlist=True, maxchars=maxlen, text_only=text_only)
+        if not tabs_only:
+            _hot_reload_simphtml(); result["content"] = simphtml.get_html(driver, cutlist=True, maxchars=maxlen, text_only=text_only)
             if text_only: result['content'] = smart_format(result['content'], max_str_len=maxlen//3, omit_str='\n\n[omitted long content]\n\n')
         return result
     except Exception as e:

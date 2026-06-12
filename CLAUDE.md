@@ -12,8 +12,8 @@ EulerAgent is a minimal (~3K lines), self-evolving autonomous agent framework th
 EulerAgent/
 ├── core/                     # Core code modules
 │   ├── agentmain.py          # Application entry point
-│   ├── agent_loop.py         # Loop engine (~127 lines)
-│   ├── ea.py                 # Tool implementations (~589 lines)
+│   ├── agent_loop.py         # Loop engine (~136 lines)
+│   ├── ea.py                 # Tool implementations (~627 lines)
 │   ├── llm/                  # LLM adapter package (layered, single-direction deps)
 │   │   ├── __init__.py       #   public facade (re-exports the layers)
 │   │   ├── config.py         #   ekey loading + safeprint
@@ -35,7 +35,7 @@ EulerAgent/
 ├── temp/                     # Runtime temporary files
 ├── frontends/                # Multiple UI frontends
 │   ├── stapp2.py             # Streamlit frontend
-│   ├── tuiapp_v2.py          # Textual TUI frontend
+│   ├── tuiapp.py             # Textual TUI frontend
 │   └── *.py                  # Bot frontends (telegram, qq, wechat, etc.)
 └── TMWebDriver.py            # Browser control (root level)
 ```
@@ -86,7 +86,7 @@ CONTRIBUTING.md is authoritative when in doubt. These are rules, not guidelines.
 streamlit run frontends/stapp2.py
 
 # Run TUI frontend
-python frontends/tuiapp_v2.py
+python frontends/tuiapp.py
 
 # Run desktop app
 python launch.pyw

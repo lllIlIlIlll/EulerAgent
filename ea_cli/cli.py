@@ -51,9 +51,9 @@ COMMANDS = {
         "cmd": ["python", "{FRONTENDS}/qtapp.py"],
     },
     "configure": {
-        "help": "运行初始配置向导 (configure_mykey.py)",
+        "help": "运行初始配置向导 (configure_ekey.py)",
         "desc": "首次安装后配置 API Key、模型参数等基础设置",
-        "cmd": ["python", "{PROJECT_DIR}/assets/scripts/configure_mykey.py"],
+        "cmd": ["python", "{PROJECT_DIR}/assets/scripts/configure_ekey.py"],
     },
     "hub": {
         "help": "启动 Hub 管理器 (launcher)",
@@ -149,9 +149,8 @@ def main():
         epilog=textwrap.dedent("""\
             示例:
               ea gui               启动桌面 GUI
-              ea web               启动 Web 增强版
-              ea web --native      启动 Web 基础版(桌面壳)
-              ea pet               启动桌面宠物 v2
+              ea tui               启动终端 TUI
+              ea cli               启动命令行对话
               ea launch            启动 webview 桌面壳
               ea list              列出所有命令
         """),

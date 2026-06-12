@@ -49,7 +49,7 @@ class TMWebDriver:
         self._link_token = _read_link_token()
         self.default_session_id = None
         self.latest_session_id = None
-        self.is_remote = socket.socket().connect_ex((host, port+1)) == 0
+        with socket.socket() as _probe: self.is_remote = _probe.connect_ex((host, port+1)) == 0
         if not self.is_remote:
             if not self._link_token: print("[WARN] no CDP token (assets/tmwd_cdp_bridge/config.js missing); /link is unauthenticated")
             self.start_ws_server()
@@ -204,17 +204,13 @@ class TMWebDriver:
             return response
  
         session = self.sessions.get(session_id)
-        if not session or not session.is_active(): 
-            time.sleep(3)
+        if not session or not session.is_active():
+            time.sleep(3)  # 页面刷新重连宽限
             session = self.sessions.get(session_id)
-            if not session or not session.is_active(): 
-                with self._lock: alive_sessions = [s for s in self.sessions.values() if s.is_active()]
-                if alive_sessions:
-                    session = alive_sessions[0]  
-                    print(f"会话 {session_id} 未连接，自动切换到最新活动会话: {session.id}")
-                    session_id = self.default_session_id = session.id
-                if not session or not session.is_active(): 
-                    raise ValueError(f"会话ID {session_id} 未连接")  
+            if not session or not session.is_active():
+                with self._lock: alive = [(s.id, s.url[:60]) for s in self.sessions.values() if s.is_active()]
+                raise ValueError(f"会话 {session_id} 未连接，不自动切换（JS 副作用不可落在错误页面）。"
+                                 f"可用会话: {alive}，请用 switch_tab_id 显式选择")
 
         tp = session.type
         if tp not in ('ws', 'http', 'ext_ws'):
@@ -295,7 +291,7 @@ class TMWebDriver:
         print(f"成功设置默认会话: {self.default_session_id}: {info['url']}")  
         return self.default_session_id  
     
-    def jump(self, url, timeout=10): self.execute_js(f"window.location.href='{url}'", timeout=timeout)
+    def jump(self, url, timeout=10): self.execute_js(f"window.location.href={json.dumps(url)}", timeout=timeout)
     
 if __name__ == "__main__":
     driver = TMWebDriver(host='127.0.0.1', port=18765)

@@ -207,16 +207,7 @@ function analyzeNode(node, pPathType='main') {
         if (isSecondary) child.node.dataset.mark = 'K:secondary';  
         else child.node.dataset.mark = 'K:nonEssential';  
       }  
-    } else {  
-      return; // relaxed: skip equalmany filtering, list truncation handles token budget
-      const uniqueClassNames = new Set(childrenInfo.map(item => item.node.getAttribute('class') || '')).size;  
-      const highClassNameVariety = uniqueClassNames >= childrenInfo.length * 0.8;  
-      if (pathType !== 'main' && highClassNameVariety && childrenInfo.length > 5) {
-        childrenInfo.forEach(child => child.node.dataset.mark = 'R:equalmany');  
-      } else {
-        childrenInfo.forEach(child => child.node.dataset.mark = 'K:equal');  
-      }
-    }  
+    } else return; // relaxed: skip equalmany filtering, list truncation handles token budget
   }  
 
   function containsButton(container) {  
@@ -633,9 +624,9 @@ temp_monitor_js = """function startStrMonitor(interval) {
     }  
     startStrMonitor(450);  
 """  
-def start_temp_monitor(driver):  
+def start_temp_monitor(driver):
     try: driver.execute_js(temp_monitor_js)
-    except: pass
+    except Exception: pass
 
 def get_temp_texts(driver):  
     js = """function stopStrMonitor() {  
@@ -817,11 +808,13 @@ def smart_truncate(soup, budget, _depth=0):
         else: cut(c, new_keep)
     return soup
 
+DIFF_MAX = 300000  # 超过此体量跳过 DOM diff，避免重型全页解析拖慢每次动作
 def execute_js_rich(script, driver, no_monitor=False):
     last_html = None
     if not no_monitor:
         try: last_html = get_html(driver, cutlist=False, extra_js=temp_monitor_js, maxchars=9999999)
-        except: pass
+        except Exception: pass
+        if last_html and len(last_html) > DIFF_MAX: last_html = None
     result = None;  error_msg = None;  reloaded = False; newTabs = []
     before_sids = set(driver.get_session_dict().keys()); response = {}
     try:
@@ -829,7 +822,7 @@ def execute_js_rich(script, driver, no_monitor=False):
         response = driver.execute_js(script)
         result = response['data'] if 'data' in response else response.get('result')
         if response.get('closed', 0) == 1: reloaded = True
-        time.sleep(1) 
+        if not no_monitor: time.sleep(1)  # 等页面对动作产生反应再 diff；只读模式无需等待
     except Exception as e:
         error = e.args[0] if e.args else str(e)
         if isinstance(error, dict): error.pop('stack', None)
@@ -853,11 +846,12 @@ def execute_js_rich(script, driver, no_monitor=False):
     if no_monitor: return rr
     if not reloaded:
         try: rr['transients'] = get_temp_texts(driver)
-        except: rr['transients'] = []
+        except Exception: rr['transients'] = []
     if not reloaded and len(newTabs) == 0:
         try:
+            if last_html is None: raise ValueError("no baseline")
             current_html = get_html(driver, cutlist=False, maxchars=9999999)
-            if last_html is None: raise Exception("no baseline")
+            if len(current_html) > DIFF_MAX: raise ValueError("page too large")
             diff_data = find_changed_elements(last_html, current_html)
             change_count = diff_data.get('changed', 0)
             top_change = diff_data.get('top_change', '')
@@ -867,7 +861,7 @@ def execute_js_rich(script, driver, no_monitor=False):
             if change_count == 0 and not transients and len(newTabs) == 0:
                 diff_summary += " (页面无变化)"
                 rr['suggestion'] = "页面无明显变化"
-        except:
+        except Exception:
             diff_summary = "页面变化监控不可用"
         rr['diff'] = diff_summary
     return rr

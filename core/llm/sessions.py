@@ -126,6 +126,7 @@ class LLMSession(BaseSession):
     def make_messages(self, raw_list): return _msgs_claude2oai(_fix_messages(raw_list))
 
 class NativeClaudeSession(BaseSession):
+    # 伪装 Claude Code 客户端指纹以适配仅限 CC 的中转端点：ToS/封号风险用户自担，上游指纹策略变化会静默失效
     def __init__(self, cfg):
         super().__init__(cfg)
         self.fake_cc_system_prompt = cfg.get("fake_cc_system_prompt", False)

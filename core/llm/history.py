@@ -7,11 +7,9 @@ import json, re
 from .config import safeprint
 print = safeprint
 
-def compress_history_tags(messages, keep_recent=10, max_len=800, force=False, interval=5):
-    """Compress <thinking>/<tool_use>/<tool_result> tags in older messages to save tokens."""
-    compress_history_tags._cd = getattr(compress_history_tags, '_cd', 0) + 1
-    if force: compress_history_tags._cd = 0
-    if compress_history_tags._cd % interval != 0: return messages
+def compress_history_tags(messages, keep_recent=10, max_len=800):
+    """Compress <thinking>/<tool_use>/<tool_result> tags in older messages to save tokens.
+    Always runs when called — cooldown is owned by the caller (per-session, see trim_messages_history)."""
     _before = sum(len(json.dumps(m, ensure_ascii=False)) for m in messages)
     _pats = {tag: re.compile(rf'(<{tag}>)([\s\S]*?)(</{tag}>)') for tag in ('thinking', 'think', 'tool_use', 'tool_result')}
     _hist_pat = re.compile(r'<(history|key_info|earlier_context)>[\s\S]*?</\1>')
@@ -61,14 +59,19 @@ def _sanitize_leading_user_msg(msg):
 def trim_messages_history(history, sess):
     cap = sess.context_win * 3
     target = int(cap * getattr(sess, 'trim_keep_rate', 0.6))
-    def cost(): return sum(len(json.dumps(m, ensure_ascii=False)) for m in history)
-    compress_history_tags(history, interval=getattr(sess, 'cut_msg_interval', 5))
-    print(f'[Debug] Current context: {cost()} chars, {len(history)} messages.')
-    if cost() <= cap: return
-    compress_history_tags(history, keep_recent=4, force=True)
-    if cost() <= target: return
-    while len(history) > 9 and cost() > target:
-        history.pop(0)
-        while history and history[0].get('role') != 'user': history.pop(0)
-        if history and history[0].get('role') == 'user': history[0] = _sanitize_leading_user_msg(history[0])
-    print(f'[Debug] Trimmed context, current: {cost()} chars, {len(history)} messages.')
+    _len = lambda m: len(json.dumps(m, ensure_ascii=False))
+    sess._cut_cd = getattr(sess, '_cut_cd', 0) + 1  # 压缩冷却按 session 计数，避免多会话互相消耗
+    if sess._cut_cd % getattr(sess, 'cut_msg_interval', 5) == 0: compress_history_tags(history)
+    total = sum(_len(m) for m in history)
+    print(f'[Debug] Current context: {total} chars, {len(history)} messages.')
+    if total <= cap: return
+    sess._cut_cd = 0
+    compress_history_tags(history, keep_recent=4)
+    total = sum(_len(m) for m in history)
+    if total <= target: return
+    while len(history) > 9 and total > target:
+        total -= _len(history.pop(0))
+        while history and history[0].get('role') != 'user': total -= _len(history.pop(0))
+        if history and history[0].get('role') == 'user':
+            old = _len(history[0]); history[0] = _sanitize_leading_user_msg(history[0]); total += _len(history[0]) - old
+    print(f'[Debug] Trimmed context, current: {total} chars, {len(history)} messages.')
