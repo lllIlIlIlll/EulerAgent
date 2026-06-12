@@ -26,7 +26,8 @@ def _load_ekeys():
 _ekey_path = _ekey_mtime = None
 def reload_ekeys():
     global _ekey_mtime
-    mt = os.stat(_ekey_path).st_mtime_ns if _ekey_path else -1
+    try: mt = os.stat(_ekey_path).st_mtime_ns if _ekey_path else -1
+    except OSError: mt = -1  # path went away / never created → fall through to _load_ekeys for a clear error
     if mt == _ekey_mtime: return globals().get('ekeys', {}), False
     mk = _load_ekeys(); _ekey_mtime = os.stat(_ekey_path).st_mtime_ns
     print(f'[Info] Load ekeys from {_ekey_path}')

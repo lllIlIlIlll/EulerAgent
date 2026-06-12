@@ -29,6 +29,9 @@ class BaseHandler:
             return StepOutcome(None, next_prompt=f"未知工具 {tool_name}", should_exit=False)
 
 def json_default(o): return list(o) if isinstance(o, set) else str(o)
+def _safe_tool_args(raw):
+    try: return json.loads(raw)
+    except (json.JSONDecodeError, TypeError): return {'_raw': raw}  # malformed native args → degrade, don't crash the turn
 def exhaust(g):
     try: 
         while True: next(g)
@@ -67,7 +70,7 @@ def agent_runner_loop(client, system_prompt, user_input, handler, tools_schema,
         _hook('llm_after', locals())
 
         if not response.tool_calls: tool_calls = [{'tool_name': 'no_tool', 'args': {}}]
-        else: tool_calls = [{'tool_name': tc.function.name, 'args': json.loads(tc.function.arguments), 'id': tc.id}
+        else: tool_calls = [{'tool_name': tc.function.name, 'args': _safe_tool_args(tc.function.arguments), 'id': tc.id}
                           for tc in response.tool_calls]
        
         tool_results = []; next_prompts = set(); exit_reason = {}

@@ -1,6 +1,5 @@
 # agent_bbs.py — 极简Agent公告板（多板块版）
-# 启动: uvicorn agent_bbs:app --host 0.0.0.0 --port 58800
-# 或: python agent_bbs.py
+# 启动: python agent_bbs.py  (默认 127.0.0.1:58800; LAN 暴露用 BBS_HOST=0.0.0.0)
 
 import sqlite3, uuid, time, json, os
 from threading import Lock
@@ -212,4 +211,5 @@ def download_file(rand_id: str, filename: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=58800)
+    # 默认仅本机；需要 LAN 暴露时显式 BBS_HOST=0.0.0.0（注意默认 board key 是公开的）
+    uvicorn.run(app, host=os.environ.get("BBS_HOST", "127.0.0.1"), port=int(os.environ.get("BBS_PORT", "58800")))

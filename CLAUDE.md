@@ -24,8 +24,6 @@ EulerAgent/
 │   │   ├── sessions.py       #   BaseSession + backend sessions
 │   │   └── clients.py        #   tool clients + resolve_*
 │   ├── llmcore.py            # Compat shim → llm package
-│   ├── handlers/             # Handler extension point (BaseHandler pattern)
-│   └── README.md
 ├── memory/                   # Layered memory system (L1-L4)
 │   ├── *.sop.md              # SOP documents
 │   ├── global_mem*.txt       # Global memory
@@ -44,13 +42,40 @@ EulerAgent/
 
 **Critical**: `memory/`, `assets/`, `temp/` stay at project root — NOT inside `core/`. The `core/` modules reference them via `../assets`, `../memory`, `../temp` relative paths.
 
-## Core Principles (from CONTRIBUTING.md)
+## Core Principles
 
-- **Self-documenting code, minimal comments** — If code needs a paragraph to explain, rewrite it
-- **Compact and visually uniform** — Fewer lines, consistent style, no fluff
-- **Small change radius** — Changing A shouldn't ripple through B, C, D
-- **More features → less code** — Good abstractions make the codebase shrink
-- **Let it crash by failure radius** — Critical errors fail loud; trivial ones pass silently
+(Style philosophy — apply by default, no exceptions.)
+- **Self-documenting code, minimal comments.** If code needs a paragraph, rewrite it.
+- **Compact and visually uniform.** Fewer lines, consistent style, no fluff.
+- **Small change radius.** Changing A shouldn't ripple through B, C, D.
+- **More features → less code.** Good abstractions make the codebase shrink.
+- **Let it crash by failure radius.** Critical errors fail loud; trivial ones pass silently.
+
+## Hard Constraints (mandatory — from CONTRIBUTING.md)
+
+CONTRIBUTING.md is authoritative when in doubt. These are rules, not guidelines.
+
+### Before writing code
+- Read the codebase end-to-end first. It's ~3K lines — small enough to read in one sitting. Understand the philosophy before proposing changes.
+- Open an Issue first for anything non-trivial. Discuss before coding.
+
+### Code review bar
+- Every PR goes through a strict automated code-review skill. Full criteria live in CONTRIBUTING.md.
+- Most AI-generated code (incl. Claude Code output) does **not** pass as-is. Run the self-check below before submitting.
+
+### PR self-check — every item must hold
+1. Can you safely modify this locally without reading the whole codebase?
+2. Is there a clear core abstraction — new features add implementations, not modify old logic?
+3. Are change points converging at boundaries, not scattered everywhere?
+4. On failure, can you quickly locate the responsible module?
+- Net line count: ideally negative or zero for refactors.
+- No unnecessary dependencies added.
+- Issue linked or context explained in ≤3 sentences.
+- Paths in `core/` use `../` prefix for memory/assets/temp.
+
+### Skill contributions
+- **Fundamental / universal** → core repo (`memory/`).
+- **Domain-specific / niche** → Skill Marketplace, not a core PR.
 
 ## Development Commands
 

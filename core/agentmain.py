@@ -43,6 +43,13 @@ def get_system_prompt():
     prompt += get_global_memory()
     return prompt
 
+# 仅允许运行时调参字段，杜绝 /session.apikey= 等劫持 api_key/api_base/proxy/system
+_SESSION_SETTABLE = frozenset({
+    'reasoning_effort', 'service_tier', 'thinking_type', 'thinking_budget_tokens',
+    'temperature', 'max_tokens', 'max_retries', 'read_timeout', 'connect_timeout',
+    'stream', 'extra_sys_prompt',
+})
+
 class EulerAgent:
     def __init__(self):
         os.makedirs(os.path.join(script_dir, '../temp'), exist_ok=True)
@@ -52,8 +59,8 @@ class EulerAgent:
         self.task_queue = queue.Queue() 
         self.is_running = False; self.stop_sig = False; self.llm_no = 0;  
         self.inc_out = False; self.verbose = True; self.show_mode = 'text'
-        self.peer_hint = True
-        self.log_path = os.path.join(script_dir, f'../temp/model_responses/model_responses_{int(time.time()*1e6)%1000000:06d}.txt')
+        self.peer_hint = True; self.unattended = False  # task/reflect set True → block high-risk code_run
+        self.log_path = os.path.join(script_dir, f'../temp/model_responses/model_responses_{os.getpid()}.txt')  # match wire._write_llm_log default
         self.load_llm_sessions()
 
     def load_llm_sessions(self):
@@ -114,6 +121,9 @@ class EulerAgent:
         if not raw_query.startswith('/'): return raw_query
         if _sm := re.match(r'/session\.(\w+)=(.*)', raw_query.strip()):
             k, v = _sm.group(1), _sm.group(2)
+            if k not in _SESSION_SETTABLE:
+                display_queue.put({'done': f"❌ 不允许设置 session.{k}（仅限运行时调参: {', '.join(sorted(_SESSION_SETTABLE))}）", 'source': 'system'})
+                return None
             vfile = os.path.join(script_dir, '../temp', v)
             if os.path.isfile(vfile): v = open(vfile, encoding='utf-8').read().strip()
             try: v = json.loads(v)  # cover number parsing
@@ -205,7 +215,7 @@ if __name__ == '__main__':
     threading.Thread(target=agent.run, daemon=True).start()
 
     if args.task:
-        agent.peer_hint = False
+        agent.peer_hint = False; agent.unattended = True
         agent.task_dir = d = os.path.join(script_dir, f'../temp/{args.task}'); nround = ''
         infile = os.path.join(d, 'input.txt')
         if args.input:
@@ -227,7 +237,7 @@ if __name__ == '__main__':
             else: break
             nround = nround + 1 if isinstance(nround, int) else 1
     elif args.reflect:
-        agent.peer_hint = False
+        agent.peer_hint = False; agent.unattended = True
         import importlib.util
         spec = importlib.util.spec_from_file_location('reflect_script', args.reflect)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)

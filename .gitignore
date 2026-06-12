@@ -16,4 +16,7 @@ temp/
 *.log
 mykey.py
 ekey.py
+ekey.json
+**/ekey.json
+assets/tmwd_cdp_bridge/config.js
 memory/file_access_stats.json

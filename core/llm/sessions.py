@@ -95,7 +95,6 @@ class BaseSession:
             try:
                 while True: chunk = next(gen); content += chunk; yield chunk
             except StopIteration as e: content_blocks = e.value or []
-            if len(content_blocks) > 1: print(f"[DEBUG BaseSession.ask] content_blocks: {content_blocks}")
             for block in (content_blocks or []):
                 if block.get('type', '') == 'tool_use':
                     tu = {'name': block.get('name', ''), 'arguments': block.get('input', {})}
